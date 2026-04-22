@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen">
     <Navbar v-if="showNavbar" />
-    <main :class="showNavbar ? 'pt-16' : ''">
+    <main :class="showNavbar ? 'pt-20' : ''">
       <RouterView v-slot="{ Component }">
-        <Transition name="fade" mode="out-in">
+        <Transition name="page" mode="out-in">
           <component :is="Component" />
         </Transition>
       </RouterView>
@@ -23,6 +23,7 @@ const showNavbar = computed(() => !['Login', 'Register'].includes(route.name))
 </script>
 
 <style>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.page-enter-active, .page-leave-active { transition: all 0.25s ease; }
+.page-enter-from { opacity: 0; transform: translateY(12px); }
+.page-leave-to   { opacity: 0; transform: translateY(-8px); }
 </style>

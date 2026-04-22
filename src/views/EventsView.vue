@@ -1,60 +1,72 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
     <!-- Hero -->
-    <div class="text-center mb-10">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">Upcoming Events</h1>
-      <p class="text-gray-500 text-lg">Discover and book your next experience</p>
+    <div class="text-center mb-14">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold text-indigo-400 mb-6" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);">
+        ✨ Discover Amazing Events
+      </div>
+      <h1 class="text-5xl sm:text-6xl font-black text-white leading-none mb-4">
+        Upcoming <span class="gradient-text">Events</span>
+      </h1>
+      <p class="text-white/40 text-lg max-w-xl mx-auto">Find and book your next unforgettable experience</p>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-8">
+    <div class="card mb-10">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">From Date</label>
-          <input v-model="filters.start" type="date" class="input-field" @change="fetchEvents" />
+          <label class="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">From</label>
+          <input v-model="filters.start" type="date" class="input-field" @change="onFilter" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">To Date</label>
-          <input v-model="filters.end" type="date" class="input-field" @change="fetchEvents" />
+          <label class="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">To</label>
+          <input v-model="filters.end" type="date" class="input-field" @change="onFilter" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Per Page</label>
-          <select v-model="filters.limit" class="input-field" @change="fetchEvents">
-            <option value="6">6</option>
-            <option value="12">12</option>
-            <option value="24">24</option>
+          <label class="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Per Page</label>
+          <select v-model="filters.limit" class="input-field" @change="onFilter">
+            <option value="6">6 events</option>
+            <option value="12">12 events</option>
+            <option value="24">24 events</option>
           </select>
         </div>
         <div class="flex items-end">
-          <button @click="clearFilters" class="btn-secondary w-full">Clear Filters</button>
+          <button @click="clearFilters" class="btn-secondary w-full">Clear</button>
         </div>
       </div>
     </div>
 
-    <!-- Loading -->
+    <!-- Loading Skeletons -->
     <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="i in 6" :key="i" class="card animate-pulse">
-        <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-        <div class="h-4 bg-gray-100 rounded w-1/2 mb-2"></div>
-        <div class="h-4 bg-gray-100 rounded w-2/3 mb-4"></div>
-        <div class="h-2 bg-gray-100 rounded mb-4"></div>
-        <div class="h-9 bg-gray-200 rounded"></div>
+      <div v-for="i in 6" :key="i" class="card flex flex-col gap-4">
+        <div class="flex justify-between">
+          <div class="skeleton w-10 h-10 rounded-xl"></div>
+          <div class="skeleton w-20 h-6 rounded-full"></div>
+        </div>
+        <div class="skeleton h-5 rounded w-4/5"></div>
+        <div class="skeleton h-3 rounded w-2/5"></div>
+        <div class="skeleton h-3 rounded w-3/5"></div>
+        <div class="skeleton h-1.5 rounded-full"></div>
+        <div class="flex gap-2">
+          <div class="skeleton h-9 rounded-xl flex-1"></div>
+          <div class="skeleton h-9 rounded-xl flex-1"></div>
+        </div>
       </div>
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="text-center py-20">
+    <div v-else-if="error" class="text-center py-24">
       <div class="text-5xl mb-4">😕</div>
-      <p class="text-red-600 font-medium">{{ error }}</p>
-      <button @click="fetchEvents" class="btn-primary mt-4">Try Again</button>
+      <p class="text-red-400 font-medium">{{ error }}</p>
+      <button @click="fetchEvents" class="btn-primary mt-6 px-8">Retry</button>
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!events.length" class="text-center py-20">
-      <div class="text-5xl mb-4">📭</div>
-      <p class="text-gray-500 text-lg">No events found</p>
-      <p class="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
+    <div v-else-if="!events.length" class="text-center py-24">
+      <div class="text-6xl mb-4">📭</div>
+      <p class="text-white/40 text-lg">No events found</p>
+      <p class="text-white/20 text-sm mt-1">Try adjusting your date filters</p>
     </div>
 
     <!-- Events Grid -->
@@ -70,33 +82,21 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="pagination.totalPages > 1" class="flex items-center justify-center gap-2 mt-10">
-      <button
-        @click="changePage(pagination.page - 1)"
-        :disabled="pagination.page === 1"
-        class="btn-secondary px-3 py-2 disabled:opacity-40"
-      >← Prev</button>
-
+    <div v-if="pagination.totalPages > 1" class="flex items-center justify-center gap-2 mt-12">
+      <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1" class="btn-secondary px-4 py-2 disabled:opacity-30">←</button>
       <div class="flex gap-1">
         <button
-          v-for="p in pagination.totalPages"
-          :key="p"
+          v-for="p in pagination.totalPages" :key="p"
           @click="changePage(p)"
-          class="w-9 h-9 rounded-lg text-sm font-medium transition-colors"
-          :class="p === pagination.page ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+          class="w-10 h-10 rounded-xl text-sm font-semibold transition-all duration-200"
+          :class="p === pagination.page ? 'btn-primary' : 'btn-secondary'"
         >{{ p }}</button>
       </div>
-
-      <button
-        @click="changePage(pagination.page + 1)"
-        :disabled="pagination.page === pagination.totalPages"
-        class="btn-secondary px-3 py-2 disabled:opacity-40"
-      >Next →</button>
+      <button @click="changePage(pagination.page + 1)" :disabled="pagination.page === pagination.totalPages" class="btn-secondary px-4 py-2 disabled:opacity-30">→</button>
     </div>
 
-    <!-- Stats bar -->
-    <p v-if="pagination.total" class="text-center text-sm text-gray-400 mt-4">
-      Showing {{ events.length }} of {{ pagination.total }} events
+    <p v-if="pagination.total" class="text-center text-xs text-white/25 mt-4">
+      {{ events.length }} of {{ pagination.total }} events
     </p>
   </div>
 </template>
@@ -111,63 +111,41 @@ import EventCard from '../components/ui/EventCard.vue'
 
 const auth = useAuthStore()
 const toast = useToastStore()
-
 const events = ref([])
 const loading = ref(false)
 const error = ref(null)
 const bookingId = ref(null)
-
 const filters = ref({ start: '', end: '', limit: '6' })
 const pagination = ref({ page: 1, total: 0, totalPages: 1 })
 
 const fetchEvents = async () => {
-  loading.value = true
-  error.value = null
+  loading.value = true; error.value = null
   try {
     const params = { page: pagination.value.page, limit: filters.value.limit }
     if (filters.value.start) params.start = filters.value.start
     if (filters.value.end) params.end = filters.value.end
-
     const res = await eventService.getAll(params)
     events.value = res.data.events
-    pagination.value = {
-      page: res.data.page,
-      total: res.data.total,
-      totalPages: res.data.totalPages,
-    }
+    pagination.value = { page: res.data.page, total: res.data.total, totalPages: res.data.totalPages }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to load events'
-  } finally {
-    loading.value = false
-  }
+  } finally { loading.value = false }
 }
 
-const changePage = (page) => {
-  pagination.value.page = page
-  fetchEvents()
-}
-
-const clearFilters = () => {
-  filters.value = { start: '', end: '', limit: '6' }
-  pagination.value.page = 1
-  fetchEvents()
-}
+const onFilter = () => { pagination.value.page = 1; fetchEvents() }
+const changePage = (p) => { pagination.value.page = p; fetchEvents() }
+const clearFilters = () => { filters.value = { start: '', end: '', limit: '6' }; onFilter() }
 
 const handleBook = async (event) => {
-  if (!auth.isAuthenticated) {
-    toast.info('Please login to book an event')
-    return
-  }
+  if (!auth.isAuthenticated) return toast.info('Please login to book')
   bookingId.value = event._id
   try {
     await bookingService.book(event._id)
-    toast.success(`Successfully booked "${event.name}"!`)
-    fetchEvents() // Refresh to update seat count
+    toast.success(`Booked "${event.name}" 🎉`)
+    fetchEvents()
   } catch (err) {
     toast.error(err.response?.data?.message || 'Booking failed')
-  } finally {
-    bookingId.value = null
-  }
+  } finally { bookingId.value = null }
 }
 
 onMounted(fetchEvents)

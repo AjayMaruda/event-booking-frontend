@@ -1,82 +1,84 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+    <div class="flex items-center justify-between mb-10 flex-wrap gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Admin Panel</h1>
-        <p class="text-gray-500 mt-1">Manage events and export bookings</p>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold text-indigo-400 mb-3" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);">
+          ⚙️ Admin Panel
+        </div>
+        <h1 class="text-4xl font-black text-white">Event Management</h1>
+        <p class="text-white/40 mt-1">Create, manage, and export event data</p>
       </div>
       <div class="flex gap-3">
-        <button @click="handleExport" :disabled="exporting" class="btn-secondary flex items-center gap-2">
-          <span>{{ exporting ? '⏳' : '📥' }}</span>
-          {{ exporting ? 'Exporting...' : 'Export CSV' }}
+        <button @click="handleExport" :disabled="exporting" class="btn-secondary flex items-center gap-2 px-5">
+          {{ exporting ? '⏳ Exporting…' : '📥 Export CSV' }}
         </button>
-        <button @click="openCreate" class="btn-primary flex items-center gap-2">
-          <span>＋</span> New Event
+        <button @click="openCreate" class="btn-primary flex items-center gap-2 px-5">
+          ＋ New Event
         </button>
       </div>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-primary-600">{{ pagination.total || 0 }}</p>
-        <p class="text-sm text-gray-500 mt-1">Total Events</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-green-600">{{ availableEvents }}</p>
-        <p class="text-sm text-gray-500 mt-1">Available</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-red-600">{{ soldOutEvents }}</p>
-        <p class="text-sm text-gray-500 mt-1">Sold Out</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-yellow-600">{{ totalSeatsBooked }}</p>
-        <p class="text-sm text-gray-500 mt-1">Seats Booked</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div class="card text-center" v-for="stat in stats" :key="stat.label">
+        <p class="text-3xl font-black mb-1" :class="stat.color">{{ stat.value }}</p>
+        <p class="text-xs text-white/40 font-medium uppercase tracking-wide">{{ stat.label }}</p>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="i in 6" :key="i" class="card animate-pulse h-52"></div>
+    <div v-if="loading" class="card p-0 overflow-hidden">
+      <div class="p-6 flex flex-col gap-4">
+        <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+          <div class="skeleton h-4 rounded flex-1"></div>
+          <div class="skeleton h-4 rounded w-24"></div>
+          <div class="skeleton h-4 rounded w-16"></div>
+          <div class="skeleton h-8 rounded-lg w-24"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!events.length" class="text-center py-20">
+    <div v-else-if="!events.length" class="text-center py-24">
       <div class="text-5xl mb-4">📋</div>
-      <p class="text-gray-500 text-lg">No events yet</p>
-      <button @click="openCreate" class="btn-primary mt-4 px-8">Create First Event</button>
+      <p class="text-white/40 text-lg">No events yet</p>
+      <button @click="openCreate" class="btn-primary mt-6 px-8">Create First Event</button>
     </div>
 
-    <!-- Events Table -->
-    <div v-else class="card overflow-hidden p-0">
+    <!-- Table -->
+    <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Event</th>
-              <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Capacity</th>
-              <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Available</th>
-              <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
+              <th class="text-left px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Event</th>
+              <th class="text-left px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Date</th>
+              <th class="text-left px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Capacity</th>
+              <th class="text-left px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Available</th>
+              <th class="text-left px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Status</th>
+              <th class="text-right px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="event in events" :key="event._id" class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4 font-medium text-gray-900 max-w-xs truncate">{{ event.name }}</td>
-              <td class="px-6 py-4 text-gray-600">{{ formatDate(event.date) }}</td>
-              <td class="px-6 py-4 text-gray-600">{{ event.capacity }}</td>
-              <td class="px-6 py-4">
-                <span :class="event.availableSeats === 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'">
-                  {{ event.availableSeats }}
-                </span>
+          <tbody>
+            <tr
+              v-for="event in events" :key="event._id"
+              class="transition-colors duration-150 group"
+              style="border-bottom: 1px solid rgba(255,255,255,0.04);"
+              :style="{ background: 'transparent' }"
+              @mouseenter="e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'"
+              @mouseleave="e => e.currentTarget.style.background = 'transparent'"
+            >
+              <td class="px-6 py-4 font-semibold text-white max-w-xs truncate">{{ event.name }}</td>
+              <td class="px-6 py-4 text-white/50">{{ formatDate(event.date) }}</td>
+              <td class="px-6 py-4 text-white/50">{{ event.capacity }}</td>
+              <td class="px-6 py-4 font-bold" :class="event.availableSeats === 0 ? 'text-red-400' : 'text-emerald-400'">
+                {{ event.availableSeats }}
               </td>
               <td class="px-6 py-4">
-                <span :class="event.availableSeats === 0 ? 'badge-danger' : event.availableSeats <= 10 ? 'badge-info' : 'badge-success'">
-                  {{ event.availableSeats === 0 ? 'Sold Out' : event.availableSeats <= 10 ? 'Almost Full' : 'Available' }}
+                <span :class="event.availableSeats === 0 ? 'badge-danger' : event.availableSeats <= 10 ? 'badge-warning' : 'badge-success'">
+                  {{ event.availableSeats === 0 ? 'Sold Out' : event.availableSeats <= 10 ? 'Few Left' : 'Available' }}
                 </span>
               </td>
               <td class="px-6 py-4">
@@ -90,29 +92,21 @@
         </table>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="pagination.totalPages > 1" class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-        <p class="text-sm text-gray-500">Page {{ pagination.page }} of {{ pagination.totalPages }}</p>
+      <!-- Table Pagination -->
+      <div v-if="pagination.totalPages > 1" class="flex items-center justify-between px-6 py-4" style="border-top: 1px solid rgba(255,255,255,0.06);">
+        <p class="text-xs text-white/30">Page {{ pagination.page }} of {{ pagination.totalPages }}</p>
         <div class="flex gap-2">
-          <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1" class="btn-secondary text-sm px-3 py-1.5 disabled:opacity-40">← Prev</button>
-          <button @click="changePage(pagination.page + 1)" :disabled="pagination.page === pagination.totalPages" class="btn-secondary text-sm px-3 py-1.5 disabled:opacity-40">Next →</button>
+          <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1" class="btn-secondary text-xs px-3 py-1.5 disabled:opacity-30">← Prev</button>
+          <button @click="changePage(pagination.page + 1)" :disabled="pagination.page === pagination.totalPages" class="btn-secondary text-xs px-3 py-1.5 disabled:opacity-30">Next →</button>
         </div>
       </div>
     </div>
 
-    <!-- Event Modal -->
-    <EventModal
-      v-if="showModal"
-      :event="editTarget"
-      @close="showModal = false"
-      @saved="handleSaved"
-    />
-
-    <!-- Delete Confirm -->
+    <EventModal v-if="showModal" :event="editTarget" @close="showModal = false" @saved="handleSaved" />
     <ConfirmDialog
       v-if="deleteTarget"
       title="Delete Event?"
-      :message="`This will permanently delete &quot;${deleteTarget.name}&quot; and all its bookings.`"
+      :message="`Permanently delete &quot;${deleteTarget.name}&quot;?`"
       confirm-text="Delete"
       icon="🗑️"
       :loading="deleting"
@@ -140,9 +134,12 @@ const deleteTarget = ref(null)
 const deleting = ref(false)
 const pagination = ref({ page: 1, total: 0, totalPages: 1 })
 
-const availableEvents = computed(() => events.value.filter(e => e.availableSeats > 0).length)
-const soldOutEvents = computed(() => events.value.filter(e => e.availableSeats === 0).length)
-const totalSeatsBooked = computed(() => events.value.reduce((acc, e) => acc + (e.capacity - e.availableSeats), 0))
+const stats = computed(() => [
+  { label: 'Total Events', value: pagination.value.total || 0, color: 'text-indigo-400' },
+  { label: 'Available',    value: events.value.filter(e => e.availableSeats > 0).length, color: 'text-emerald-400' },
+  { label: 'Sold Out',     value: events.value.filter(e => e.availableSeats === 0).length, color: 'text-red-400' },
+  { label: 'Seats Booked', value: events.value.reduce((a, e) => a + (e.capacity - e.availableSeats), 0), color: 'text-amber-400' },
+])
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'
 
@@ -152,25 +149,15 @@ const fetchEvents = async () => {
     const res = await eventService.getAll({ page: pagination.value.page, limit: 10 })
     events.value = res.data.events
     pagination.value = { page: res.data.page, total: res.data.total, totalPages: res.data.totalPages }
-  } catch {
-    toast.error('Failed to load events')
-  } finally {
-    loading.value = false
-  }
+  } catch { toast.error('Failed to load events') }
+  finally { loading.value = false }
 }
 
-const changePage = (page) => { pagination.value.page = page; fetchEvents() }
-
+const changePage = (p) => { pagination.value.page = p; fetchEvents() }
 const openCreate = () => { editTarget.value = null; showModal.value = true }
-const openEdit = (event) => { editTarget.value = event; showModal.value = true }
-
-const handleSaved = (savedEvent) => {
-  showModal.value = false
-  toast.success(editTarget.value ? 'Event updated!' : 'Event created!')
-  fetchEvents()
-}
-
-const confirmDelete = (event) => { deleteTarget.value = event }
+const openEdit = (e) => { editTarget.value = e; showModal.value = true }
+const handleSaved = () => { showModal.value = false; toast.success(editTarget.value ? 'Event updated!' : 'Event created!'); fetchEvents() }
+const confirmDelete = (e) => { deleteTarget.value = e }
 
 const handleDelete = async () => {
   deleting.value = true
@@ -181,21 +168,14 @@ const handleDelete = async () => {
     fetchEvents()
   } catch (err) {
     toast.error(err.response?.data?.message || 'Delete failed')
-  } finally {
-    deleting.value = false
-  }
+  } finally { deleting.value = false }
 }
 
 const handleExport = async () => {
   exporting.value = true
-  try {
-    await bookingService.exportCSV()
-    toast.success('Bookings exported successfully!')
-  } catch {
-    toast.error('Export failed')
-  } finally {
-    exporting.value = false
-  }
+  try { await bookingService.exportCSV(); toast.success('CSV exported!') }
+  catch { toast.error('Export failed') }
+  finally { exporting.value = false }
 }
 
 onMounted(fetchEvents)
